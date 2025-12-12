@@ -1,6 +1,7 @@
 import useField from "../hooks/useField";
 import useSignup from "../hooks/useSignup";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const Signup = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
@@ -8,19 +9,24 @@ const Signup = ({ setIsAuthenticated }) => {
   const email = useField("email");
   const password = useField("password");
 
-  const { signup, error } = useSignup("/api/users/signup");
+  const { signup, isLoading } = useSignup("/api/users/signup");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    await signup({
+    setErrorMessage("");
+
+    const result = await signup({
       email: email.value,
       password: password.value,
       name: name.value,
     });
-    if (!error) {
-      console.log("success");
+
+    if (result.success) {
       setIsAuthenticated(true);
       navigate("/");
+    } else {
+      setErrorMessage(result.error || "Failed to signup");
     }
   };
 
@@ -34,7 +40,8 @@ const Signup = ({ setIsAuthenticated }) => {
         <input {...email} />
         <label>Password:</label>
         <input {...password} />
-        <button>Sign up</button>
+        <button disabled={isLoading}>{isLoading ? "Signing up..." : "Sign up"}</button>
+        {errorMessage && <p className="error">{errorMessage}</p>}
       </form>
     </div>
   );
