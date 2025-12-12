@@ -1,32 +1,26 @@
 import useField from "../hooks/useField";
-import useSignup from "../hooks/useSignup";
+import useAuth from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 
 const Signup = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
-  const name = useField("text");  
+  const name = useField("text");
   const email = useField("email");
   const password = useField("password");
 
-  const { signup, isLoading } = useSignup("/api/users/signup");
-  const [errorMessage, setErrorMessage] = useState("");
+  const { auth, isLoading, error } = useAuth();
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage("");
-
-    const result = await signup({
+    const result = await auth("/api/users/signup", {
+      name: name.value,
       email: email.value,
       password: password.value,
-      name: name.value,
     });
 
     if (result.success) {
       setIsAuthenticated(true);
       navigate("/");
-    } else {
-      setErrorMessage(result.error || "Failed to signup");
     }
   };
 
@@ -41,7 +35,7 @@ const Signup = ({ setIsAuthenticated }) => {
         <label>Password:</label>
         <input {...password} />
         <button disabled={isLoading}>{isLoading ? "Signing up..." : "Sign up"}</button>
-        {errorMessage && <p className="error">{errorMessage}</p>}
+        {error && <p className="error">{error}</p>}
       </form>
     </div>
   );
