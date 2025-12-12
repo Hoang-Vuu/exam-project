@@ -52,9 +52,18 @@ const getCarById = async (req, res) => {
 const deleteCar = async (req, res) => {
   const { id } = req.params;
   try {
-    // const user_id = req.user._id;
-    // const car = await Car.findByIdAndDelete({ _id: id, user_id: user_id });
-    const car = await Car.findByIdAndDelete({ _id: id,});
+     // Get the ID of the currently authenticated user from the request object
+    const user_id = req.user._id;
+    const car = await Car.findByIdAndDelete({ _id: id, user_id: user_id });
+    // Delete the car only if it matches both the car ID and the authenticated user's ID
+    // This ensures that a user can only delete their own car
+    // Previously, using Car.findByIdAndDelete({ _id: id }) would delete any car by ID,
+    // regardless of ownership, which is a security issue.
+
+    //const car = await Car.findByIdAndDelete({ _id: id,});
+
+    // If no car is found, either the car does not exist or the authenticated user
+    // does not own it. Returning a 404 prevents unauthorized deletion.
     if (!car) {
       return res.status(404).json({ message: 'Car not found' });
     }
@@ -69,10 +78,14 @@ const deleteCar = async (req, res) => {
 const updateCar = async (req, res) => {
   const { id } = req.params;
   try {
-    // const user_id = req.user._id;
+    const user_id = req.user._id;
+    // Update the car only if it belongs to the authenticated user
+    // This adds an authorization check to ensure users can only update their own cars
+    // Previously, using { _id: id } would allow any user to update any car
+    // as long as they knew the car's ID, which is a security vulnerability.
     const car = await Car.findOneAndUpdate(
-      // { _id: id, user_id: user_id },
-      { _id: id,  },
+      { _id: id, user_id: user_id }, // // Authorization enforced here
+      // { _id: id,  },
       { ...req.body },
       { new: true }
     );
